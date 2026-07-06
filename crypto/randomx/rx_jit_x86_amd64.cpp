@@ -1,0 +1,1 @@
+#include "librandomx/src/jit_compiler_x86.cpp"
