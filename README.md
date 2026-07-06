@@ -1,3 +1,15 @@
+## ChiralGeth: The Chiral Network Protocol Provider
+
+> A [core-geth](https://github.com/etclabscore/core-geth) downstream implementing **Chiral**, a CPU-mineable
+> Ethereum-protocol network whose proof-of-work is
+> [RandomX v2](https://github.com/SChernykh/RandomX/blob/v2/doc/design_v2.md). Run it with `geth --chiral`;
+> mine with `geth --chiral --mine --miner.threads=<N>`. See `PLAN.md` for the migration plan and status,
+> and `CLAUDE.md` for a codebase orientation.
+
+---
+
+Upstream core-geth README follows.
+
 ## CoreGeth: An Ethereum Protocol Provider
 
 > An [ethereum/go-ethereum](https://github.com/ethereum/go-ethereum) downstream effort to make the Ethereum Protocol accessible and extensible for a diverse ecosystem.
@@ -31,6 +43,7 @@ Networks supported by the respective go-ethereum packaged `geth` program.
 |        |                   | Tobalaba (EWF Testnet)                |                                                          |                      |
 |        |                   | Ephemeral development PoA network     | :heavy_check_mark:                                       | :heavy_check_mark:   |
 | MINTME | :zap:             | MintMe.com Coin                       | :heavy_check_mark:                                       |                      |
+| CHI    | :zap:             | Chiral (RandomX v2 PoW)               | :heavy_check_mark:                                       |                      |
 
 - :zap: = __Proof of Work__
 - :handshake: = __Proof of Authority__
