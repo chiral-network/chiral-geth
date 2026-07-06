@@ -136,15 +136,20 @@ func TestSealAndVerifyAcrossEpochs(t *testing.T) {
 	genesis := testGenesis()
 	chain := newTestChain(genesis)
 
-	// Mine through the first epoch switch (seed changes at block 11 with
-	// EpochLength=8, EpochLag=2: blocks 1-10 keyed by genesis, 11+ by block 8).
+	// Mine through two epoch switches (seed changes at blocks 11 and 19 with
+	// EpochLength=8, EpochLag=2: blocks 1-10 keyed by genesis, 11-18 by
+	// block 8, 19+ by block 16). Reaching a third seed also exercises the
+	// mining-dataset LRU eviction (maxDatasets=2).
 	var headers []*types.Header
 	parent := genesis
-	for i := 1; i <= 12; i++ {
+	for i := 1; i <= 20; i++ {
 		header := childHeader(t, engine, chain, parent)
 
 		wantSeed := genesis.Hash()
-		if header.Number.Uint64() > 10 {
+		switch {
+		case header.Number.Uint64() > 18:
+			wantSeed = chain.GetHeaderByNumber(16).Hash()
+		case header.Number.Uint64() > 10:
 			wantSeed = chain.GetHeaderByNumber(8).Hash()
 		}
 		if header.MixDigest != wantSeed {
@@ -243,5 +248,15 @@ func TestCalcDifficultyClamps(t *testing.T) {
 	// Slow block: clamped at the minimum.
 	if d := CalcDifficulty(conf, parent.Time+10_000, parent); d.Cmp(MinimumDifficulty) != 0 {
 		t.Errorf("slow block: got %v, want minimum %v", d, MinimumDifficulty)
+	}
+	// An uncled parent weighs the adjustment one step higher (EIP-100): at
+	// the same timestamp delta, difficulty must come out strictly higher.
+	bigParent := testGenesis()
+	bigParent.Difficulty = big.NewInt(1_000_000) // far from the clamp
+	noUncles := CalcDifficulty(conf, bigParent.Time+13, bigParent)
+	bigParent.UncleHash = common.HexToHash("0x01") // != EmptyUncleHash
+	withUncles := CalcDifficulty(conf, bigParent.Time+13, bigParent)
+	if withUncles.Cmp(noUncles) <= 0 {
+		t.Errorf("uncled parent: got %v, want > %v", withUncles, noUncles)
 	}
 }

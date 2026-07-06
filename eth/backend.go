@@ -486,6 +486,17 @@ func (s *Ethereum) StartMining(threads int) error {
 			threads = -1 // Disable the miner from within
 		}
 		th.SetThreads(threads)
+		if threads < 0 {
+			// On CPU-mineable chains this is a common operator mistake:
+			// --mine without --miner.threads only serves remote getWork.
+			inner := s.engine
+			if b, ok := s.engine.(*beacon.Beacon); ok {
+				inner = b.InnerEngine()
+			}
+			if _, ok := inner.(*randomx.RandomX); ok {
+				log.Warn("Mining without local CPU threads; only remote miners (eth_getWork) will produce blocks. Pass --miner.threads=N or call miner_start(N) to hash locally.")
+			}
+		}
 	}
 	// If the miner was not running, initialize it
 	if !s.IsMining() {

@@ -1,5 +1,15 @@
 # Chiral: RandomX v2 proof-of-work migration plan
 
+> **Status (2026-07-06)**: Phases 1–4 complete, Phase 5 mostly complete on the
+> `chiral` branch. `geth --chiral --mine --miner.threads=N` mines RandomX v2
+> blocks and peers sync/verify them. Defaults adopted pending confirmation:
+> chainID/networkID 61803, 2048/64 seed epochs, stock RandomX config
+> (unique-salt decision open), 2 CHI placeholder reward, genesis difficulty
+> 0x20000. Note: `--mine` alone only serves remote miners (upstream
+> semantics); local hashing needs `--miner.threads=N`. Known env caveat: the
+> repo's pinned golangci-lint predates Go 1.24 and emits bogus typecheck
+> errors repo-wide (pre-existing; CI toolchain bump tracked for Phase 6).
+
 Goal: turn this core-geth fork into a new PoW blockchain ("Chiral") whose consensus hash is
 **RandomX v2** (https://github.com/SChernykh/RandomX/tree/v2, `doc/design_v2.md`), replacing
 ethash. Everything else (EVM, state, p2p, RPC) stays geth-compatible.

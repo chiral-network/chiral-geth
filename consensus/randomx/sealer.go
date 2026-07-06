@@ -138,12 +138,21 @@ func (r *RandomX) mine(block *types.Block, id int, seed uint64, abort chan struc
 	}
 	defer vm.Destroy()
 
-	// Start generating random nonces until we abort or find a good one
+	// Start generating random nonces until we abort or find a good one. The
+	// batched hash API pipelines scratchpad initialization of the next nonce
+	// with program execution of the previous one: HashNext(n+1) returns the
+	// hash of nonce n.
 	var (
 		attempts = int64(0)
 		nonce    = seed
+		prev     = seed
 	)
 	logger.Trace("Started RandomX nonce search", "seed", seed)
+
+	binary := types.EncodeNonce(nonce)
+	copy(input[common.HashLength:], binary[:])
+	vm.HashFirst(input)
+	nonce++
 search:
 	for {
 		select {
@@ -160,24 +169,25 @@ search:
 				r.hashrate.Mark(attempts)
 				attempts = 0
 			}
-			// Compute the PoW value of this nonce
+			// Queue the next nonce, collecting the PoW value of the previous one
 			binary := types.EncodeNonce(nonce)
 			copy(input[common.HashLength:], binary[:])
-			hash := vm.CalcHash(input)
+			hash := vm.HashNext(input)
 			if result.SetBytes(hash[:]).Cmp(target) <= 0 {
 				// Correct nonce found, create a new header with it
 				header = types.CopyHeader(header)
-				header.Nonce = types.EncodeNonce(nonce)
+				header.Nonce = types.EncodeNonce(prev)
 
 				// Seal and return a block (if still needed)
 				select {
 				case found <- block.WithSeal(header):
-					logger.Trace("RandomX nonce found and reported", "attempts", nonce-seed, "nonce", nonce)
+					logger.Trace("RandomX nonce found and reported", "attempts", nonce-seed, "nonce", prev)
 				case <-abort:
-					logger.Trace("RandomX nonce found but discarded", "attempts", nonce-seed, "nonce", nonce)
+					logger.Trace("RandomX nonce found but discarded", "attempts", nonce-seed, "nonce", prev)
 				}
 				break search
 			}
+			prev = nonce
 			nonce++
 		}
 	}
