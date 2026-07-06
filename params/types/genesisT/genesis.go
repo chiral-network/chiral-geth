@@ -1153,6 +1153,22 @@ func (g *Genesis) SetLyra2NonceTransition(n *uint64) error {
 	return g.Config.SetLyra2NonceTransition(n)
 }
 
+func (g *Genesis) GetRandomXSeedEpochLength() *uint64 {
+	return g.Config.GetRandomXSeedEpochLength()
+}
+
+func (g *Genesis) SetRandomXSeedEpochLength(n *uint64) error {
+	return g.Config.SetRandomXSeedEpochLength(n)
+}
+
+func (g *Genesis) GetRandomXSeedEpochLag() *uint64 {
+	return g.Config.GetRandomXSeedEpochLag()
+}
+
+func (g *Genesis) SetRandomXSeedEpochLag(n *uint64) error {
+	return g.Config.SetRandomXSeedEpochLag(n)
+}
+
 func (g *Genesis) String() string {
 	j, _ := json.MarshalIndent(g, "", "    ")
 	return "Genesis: " + string(j)

@@ -839,6 +839,9 @@ func (c *ChainConfig) GetConsensusEngineType() ctypes.ConsensusEngineT {
 	if c.Lyra2 != nil {
 		return ctypes.ConsensusEngineT_Lyra2
 	}
+	if c.RandomX != nil {
+		return ctypes.ConsensusEngineT_RandomX
+	}
 	return ctypes.ConsensusEngineT_Ethash
 }
 
@@ -856,6 +859,12 @@ func (c *ChainConfig) MustSetConsensusEngineType(t ctypes.ConsensusEngineT) erro
 		c.Lyra2 = new(ctypes.Lyra2Config)
 		c.Ethash = nil
 		c.Clique = nil
+		return nil
+	case ctypes.ConsensusEngineT_RandomX:
+		c.RandomX = new(ctypes.RandomXConfig)
+		c.Ethash = nil
+		c.Clique = nil
+		c.Lyra2 = nil
 		return nil
 	default:
 		return ctypes.ErrUnsupportedConfigFatal
@@ -1241,5 +1250,35 @@ func (c *ChainConfig) SetLyra2NonceTransition(n *uint64) error {
 
 	c.Lyra2NonceTransitionBlock = setBig(c.Lyra2NonceTransitionBlock, n)
 
+	return nil
+}
+
+func (c *ChainConfig) GetRandomXSeedEpochLength() *uint64 {
+	if c.GetConsensusEngineType() != ctypes.ConsensusEngineT_RandomX {
+		return nil
+	}
+	return bigNewU64(c.RandomXSeedEpochLength)
+}
+
+func (c *ChainConfig) SetRandomXSeedEpochLength(n *uint64) error {
+	if c.RandomX == nil {
+		return ctypes.ErrUnsupportedConfigFatal
+	}
+	c.RandomXSeedEpochLength = setBig(c.RandomXSeedEpochLength, n)
+	return nil
+}
+
+func (c *ChainConfig) GetRandomXSeedEpochLag() *uint64 {
+	if c.GetConsensusEngineType() != ctypes.ConsensusEngineT_RandomX {
+		return nil
+	}
+	return bigNewU64(c.RandomXSeedEpochLag)
+}
+
+func (c *ChainConfig) SetRandomXSeedEpochLag(n *uint64) error {
+	if c.RandomX == nil {
+		return ctypes.ErrUnsupportedConfigFatal
+	}
+	c.RandomXSeedEpochLag = setBig(c.RandomXSeedEpochLag, n)
 	return nil
 }

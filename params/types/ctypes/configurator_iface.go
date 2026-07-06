@@ -302,6 +302,7 @@ type ConsensusEnginator interface {
 	EthashConfigurator
 	CliqueConfigurator
 	Lyra2Configurator
+	RandomXConfigurator
 }
 
 type EthashConfigurator interface {
@@ -371,6 +372,17 @@ type CliqueConfigurator interface {
 type Lyra2Configurator interface {
 	GetLyra2NonceTransition() *uint64
 	SetLyra2NonceTransition(n *uint64) error
+}
+
+// RandomXConfigurator exposes the RandomX seed epoch schedule: the key
+// (seed block hash) changes every SeedEpochLength blocks, referencing the
+// seed block SeedEpochLag blocks back. Nil values select the engine
+// defaults (2048/64).
+type RandomXConfigurator interface {
+	GetRandomXSeedEpochLength() *uint64
+	SetRandomXSeedEpochLength(n *uint64) error
+	GetRandomXSeedEpochLag() *uint64
+	SetRandomXSeedEpochLag(n *uint64) error
 }
 
 type BlockSealer interface {

@@ -86,10 +86,11 @@ type ChainConfig struct {
 	EWASMBlock *big.Int `json:"ewasmBlock,omitempty"` // EWASM switch block (nil = no fork, 0 = already activated)
 
 	// Various consensus engines
-	Ethash    *ctypes.EthashConfig `json:"ethash,omitempty"`
-	Clique    *ctypes.CliqueConfig `json:"clique,omitempty"`
-	Lyra2     *ctypes.Lyra2Config  `json:"lyra2,omitempty"`
-	IsDevMode bool                 `json:"isDev,omitempty"`
+	Ethash    *ctypes.EthashConfig  `json:"ethash,omitempty"`
+	Clique    *ctypes.CliqueConfig  `json:"clique,omitempty"`
+	Lyra2     *ctypes.Lyra2Config   `json:"lyra2,omitempty"`
+	RandomX   *ctypes.RandomXConfig `json:"randomx,omitempty"`
+	IsDevMode bool                  `json:"isDev,omitempty"`
 
 	// NOTE: These are not included in this type upstream.
 	TrustedCheckpoint       *ctypes.TrustedCheckpoint      `json:"trustedCheckpoint"`
@@ -103,6 +104,11 @@ type ChainConfig struct {
 	ecbp1100DeactivateTransition *big.Int
 
 	Lyra2NonceTransitionBlock *big.Int `json:"lyra2NonceTransitionBlock,omitempty"`
+
+	// RandomX seed epoch schedule overrides; nil selects the engine
+	// defaults (2048-block epochs, 64-block lag).
+	RandomXSeedEpochLength *big.Int `json:"randomxSeedEpochLength,omitempty"`
+	RandomXSeedEpochLag    *big.Int `json:"randomxSeedEpochLag,omitempty"`
 }
 
 // networkNames are user friendly names to use in the chain spec banner.
@@ -138,6 +144,8 @@ func (c *ChainConfig) String() string {
 		} else {
 			banner += "Consensus: Beacon (proof-of-stake), merged from Clique (proof-of-authority)\n"
 		}
+	case c.RandomX != nil:
+		banner += "Consensus: RandomX (proof-of-work)\n"
 	default:
 		banner += "Consensus: unknown\n"
 	}

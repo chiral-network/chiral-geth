@@ -258,10 +258,11 @@ type CoreGethChainConfig struct {
 	DisposalBlock *big.Int `json:"disposalBlock,omitempty"` // Bomb disposal HF block
 
 	// Various consensus engines
-	Ethash    *ctypes.EthashConfig `json:"ethash,omitempty"`
-	Clique    *ctypes.CliqueConfig `json:"clique,omitempty"`
-	Lyra2     *ctypes.Lyra2Config  `json:"lyra2,omitempty"`
-	IsDevMode bool                 `json:"isDev,omitempty"`
+	Ethash    *ctypes.EthashConfig  `json:"ethash,omitempty"`
+	Clique    *ctypes.CliqueConfig  `json:"clique,omitempty"`
+	Lyra2     *ctypes.Lyra2Config   `json:"lyra2,omitempty"`
+	RandomX   *ctypes.RandomXConfig `json:"randomx,omitempty"`
+	IsDevMode bool                  `json:"isDev,omitempty"`
 
 	// TerminalTotalDifficulty is the amount of total difficulty reached by
 	// the network that triggers the consensus upgrade.
@@ -281,6 +282,11 @@ type CoreGethChainConfig struct {
 	RequireBlockHashes map[uint64]common.Hash `json:"requireBlockHashes"`
 
 	Lyra2NonceTransitionBlock *big.Int `json:"lyra2NonceTransitionBlock,omitempty"`
+
+	// RandomX seed epoch schedule overrides; nil selects the engine
+	// defaults (2048-block epochs, 64-block lag).
+	RandomXSeedEpochLength *big.Int `json:"randomxSeedEpochLength,omitempty"`
+	RandomXSeedEpochLag    *big.Int `json:"randomxSeedEpochLag,omitempty"`
 }
 
 // String implements the fmt.Stringer interface.
@@ -293,6 +299,8 @@ func (c *CoreGethChainConfig) String() string {
 		engine = c.Clique
 	case c.Lyra2 != nil:
 		engine = c.Lyra2
+	case c.RandomX != nil:
+		engine = c.RandomX
 	default:
 		engine = "unknown"
 	}
