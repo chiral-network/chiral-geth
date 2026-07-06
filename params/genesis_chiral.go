@@ -26,7 +26,7 @@ import (
 // The constant is checked (and, after genesis changes, regenerated) by
 // TestChiralGenesisHash in core/genesis_test.go, which is where genesis
 // blocks can be assembled without an import cycle.
-var ChiralGenesisHash = common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000000")
+var ChiralGenesisHash = common.HexToHash("0xb1524b30b613245ec37af6d3f36b2157846dcac14dd68d86f87271493d18354d")
 
 // DefaultChiralGenesisBlock returns the Chiral network genesis block.
 //

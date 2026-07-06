@@ -31,6 +31,7 @@ import (
 	"github.com/ethereum/go-ethereum/consensus/beacon"
 	"github.com/ethereum/go-ethereum/consensus/clique"
 	"github.com/ethereum/go-ethereum/consensus/lyra2"
+	"github.com/ethereum/go-ethereum/consensus/randomx"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/bloombits"
 	"github.com/ethereum/go-ethereum/core/rawdb"
@@ -168,7 +169,14 @@ func New(stack *node.Node, config *ethconfig.Config) (*Ethereum, error) {
 		}
 	}
 
-	engine := ethconfig.CreateConsensusEngine(stack, &ethashConfig, cliqueConfig, lyra2Config, config.Miner.Notify, config.Miner.Noverify, chainDb)
+	var randomxConfig *randomx.Config
+	if config.Genesis != nil && config.Genesis.Config != nil {
+		if config.Genesis.Config.GetConsensusEngineType() == ctypes.ConsensusEngineT_RandomX {
+			randomxConfig = randomx.ConfigForChain(config.Genesis.Config)
+		}
+	}
+
+	engine := ethconfig.CreateConsensusEngine(stack, &ethashConfig, cliqueConfig, lyra2Config, randomxConfig, config.Miner.Notify, config.Miner.Noverify, chainDb)
 
 	chainConfig, err := core.LoadChainConfig(chainDb, config.Genesis)
 	if err != nil {

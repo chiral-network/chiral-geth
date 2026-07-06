@@ -214,6 +214,7 @@ func TestGenesisHashes(t *testing.T) {
 		{params.DefaultGenesisBlock(), params.MainnetGenesisHash},
 		{params.DefaultMordorGenesisBlock(), params.MordorGenesisHash},
 		{params.DefaultSepoliaGenesisBlock(), params.SepoliaGenesisHash},
+		{params.DefaultChiralGenesisBlock(), params.ChiralGenesisHash},
 	} {
 		// Test via MustCommit
 		db := rawdb.NewMemoryDatabase()

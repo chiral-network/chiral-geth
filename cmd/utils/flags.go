@@ -42,6 +42,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/fdlimit"
 	"github.com/ethereum/go-ethereum/consensus/ethash"
 	"github.com/ethereum/go-ethereum/consensus/lyra2"
+	"github.com/ethereum/go-ethereum/consensus/randomx"
 
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/rawdb"
@@ -175,6 +176,11 @@ var (
 	MintMeFlag = &cli.BoolFlag{
 		Name:     "mintme",
 		Usage:    "MintMe.com Coin mainnet: pre-configured MintMe.com Coin mainnet",
+		Category: flags.EthCategory,
+	}
+	ChiralFlag = &cli.BoolFlag{
+		Name:     "chiral",
+		Usage:    "Chiral mainnet: pre-configured Chiral RandomX proof-of-work network",
 		Category: flags.EthCategory,
 	}
 	MordorFlag = &cli.BoolFlag{
@@ -1131,6 +1137,7 @@ var (
 		MainnetFlag,
 		ClassicFlag,
 		MintMeFlag,
+		ChiralFlag,
 	}, TestnetFlags...)
 
 	// DatabaseFlags is the flag group of all database flags.
@@ -1209,6 +1216,8 @@ func setBootstrapNodes(ctx *cli.Context, cfg *p2p.Config) {
 			urls = params.ClassicBootnodes
 		case ctx.Bool(MintMeFlag.Name):
 			urls = params.MintMeBootnodes
+		case ctx.Bool(ChiralFlag.Name):
+			urls = params.ChiralBootnodes
 		case ctx.Bool(MordorFlag.Name):
 			urls = params.MordorBootnodes
 		case ctx.Bool(SepoliaFlag.Name):
@@ -1248,6 +1257,8 @@ func setBootstrapNodesV5(ctx *cli.Context, cfg *p2p.Config) {
 		urls = params.MordorBootnodes
 	case ctx.Bool(MintMeFlag.Name):
 		urls = params.MintMeBootnodes
+	case ctx.Bool(ChiralFlag.Name):
+		urls = params.ChiralBootnodes
 	case cfg.BootstrapNodesV5 != nil:
 		return // already set, don't apply defaults.
 	}
@@ -1693,6 +1704,8 @@ func dataDirPathForCtxChainConfig(ctx *cli.Context, baseDataDirPath string) stri
 		return filepath.Join(baseDataDirPath, "sepolia")
 	case ctx.Bool(MintMeFlag.Name):
 		return filepath.Join(baseDataDirPath, "mintme")
+	case ctx.Bool(ChiralFlag.Name):
+		return filepath.Join(baseDataDirPath, "chiral")
 	case ctx.Bool(HoleskyFlag.Name):
 		return filepath.Join(baseDataDirPath, "holesky")
 	}
@@ -1945,7 +1958,7 @@ func CheckExclusive(ctx *cli.Context, args ...interface{}) {
 // SetEthConfig applies eth-related command line flags to the config.
 func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *ethconfig.Config) {
 	// Avoid conflicting network flags
-	CheckExclusive(ctx, MainnetFlag, DeveloperFlag, DeveloperPoWFlag, SepoliaFlag, ClassicFlag, MordorFlag, MintMeFlag, HoleskyFlag)
+	CheckExclusive(ctx, MainnetFlag, DeveloperFlag, DeveloperPoWFlag, SepoliaFlag, ClassicFlag, MordorFlag, MintMeFlag, ChiralFlag, HoleskyFlag)
 	CheckExclusive(ctx, LightServeFlag, SyncModeFlag, "light")
 	CheckExclusive(ctx, DeveloperFlag, DeveloperPoWFlag, ExternalSignerFlag) // Can't use both ephemeral unlocked and external signer
 
@@ -2510,6 +2523,8 @@ func genesisForCtxChainConfig(ctx *cli.Context) *genesisT.Genesis {
 		genesis = params.DefaultSepoliaGenesisBlock()
 	case ctx.Bool(MintMeFlag.Name):
 		genesis = params.DefaultMintMeGenesisBlock()
+	case ctx.Bool(ChiralFlag.Name):
+		genesis = params.DefaultChiralGenesisBlock()
 	case ctx.Bool(HoleskyFlag.Name):
 		genesis = params.DefaultHoleskyGenesisBlock()
 	case ctx.Bool(DeveloperFlag.Name):
@@ -2547,14 +2562,22 @@ func MakeChain(ctx *cli.Context, stack *node.Node, readonly bool) (*core.BlockCh
 		lyra2Config = &lyra2.Config{}
 	}
 
+	var randomxConfig *randomx.Config
+	if gspec != nil && gspec.Config != nil && gspec.Config.GetConsensusEngineType().IsRandomX() {
+		randomxConfig = randomx.ConfigForChain(gspec.Config)
+	}
+
 	// Toggle PoW modes at user request.
 	if ctx.Bool(FakePoWFlag.Name) {
 		ethashConfig.PowMode = ethash.ModeFake
+		if randomxConfig != nil {
+			randomxConfig.FakeMode = true
+		}
 	} else if ctx.Bool(FakePoWPoissonFlag.Name) {
 		ethashConfig.PowMode = ethash.ModePoissonFake
 	}
 
-	engine := ethconfig.CreateConsensusEngine(stack, &ethashConfig, cliqueConfig, lyra2Config, nil, false, chainDb)
+	engine := ethconfig.CreateConsensusEngine(stack, &ethashConfig, cliqueConfig, lyra2Config, randomxConfig, nil, false, chainDb)
 	if gcmode := ctx.String(GCModeFlag.Name); gcmode != gcModeFull && gcmode != gcModeArchive {
 		Fatalf("--%s must be either 'full' or 'archive'", GCModeFlag.Name)
 	}

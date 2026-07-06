@@ -29,6 +29,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto/randomx"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/metrics"
+	"github.com/ethereum/go-ethereum/params/types/ctypes"
 	"github.com/ethereum/go-ethereum/rpc"
 )
 
@@ -92,6 +93,19 @@ type RandomX struct {
 	datasets map[common.Hash]*minerDataset
 
 	closeOnce sync.Once
+}
+
+// ConfigForChain returns an engine Config with the seed epoch schedule taken
+// from the chain configuration; nil chain values select the engine defaults.
+func ConfigForChain(conf ctypes.ChainConfigurator) *Config {
+	c := &Config{}
+	if n := conf.GetRandomXSeedEpochLength(); n != nil {
+		c.EpochLength = *n
+	}
+	if n := conf.GetRandomXSeedEpochLag(); n != nil {
+		c.EpochLag = *n
+	}
+	return c
 }
 
 // New creates a RandomX consensus engine.
