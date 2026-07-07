@@ -3,8 +3,9 @@
 > **Status (2026-07-06)**: Phases 1–4 complete, Phase 5 mostly complete on the
 > `chiral` branch. `geth --chiral --mine --miner.threads=N` mines RandomX v2
 > blocks and peers sync/verify them. Defaults adopted pending confirmation:
-> chainID/networkID 61803, 2048/64 seed epochs, stock RandomX config
-> (unique-salt decision open), 2 CHI placeholder reward. Genesis difficulty
+> chainID/networkID 61803, 2048/64 seed epochs, unique RandomX salt
+> "RandomX-Chiral\x01" (decided 2026-07-06; algo id rx/chiral), 2 CHI
+> placeholder reward. Genesis difficulty
 > = MinimumDifficulty (bootstrap-from-minimum, decided 2026-07-06; see
 > docs/chiral/launch-parameters.md). Note: `--mine` alone only serves remote miners (upstream
 > semantics); local hashing needs `--miner.threads=N`. Known env caveat: the
@@ -52,10 +53,11 @@ From `doc/design_v2.md` + `doc/configuration.md` (fetched 2026-07-06):
    chainlist.org; placeholder: 61803). Files: `params/config_chiral.go`, `genesis_chiral.go`,
    `alloc_chiral.go`, `bootnodes_chiral.go`, `--chiral` flag. Genesis enables all ETH forks
    through Shanghai at block 0 (modern EVM from day one), PoW forever (no TTD).
-2. **RandomX configuration**: adopt v2 defaults but set `RANDOMX_ARGON_SALT = "Chiral\x01"`
-   (unique per configuration.md guidance). Cost: stock XMRig can't mine Chiral without a patch;
-   benefit: immunity to zero-effort hashpower redirection. (If instant miner-ecosystem
-   compatibility matters more, keep stock parameters — decision point.)
+2. **RandomX configuration**: v2 defaults with a unique salt — DECIDED 2026-07-06:
+   `RANDOMX_ARGON_SALT = "RandomX-Chiral\x01"` (upstream requires >= 8 chars), miner
+   algo id `rx/chiral`. Cost: stock XMRig can't mine Chiral without a patch (XMRig
+   variant upstreaming is a pre-launch task); benefit: immunity to zero-effort
+   hashpower redirection. Implemented in crypto/randomx (see VENDOR.md).
 3. **Key (seed) epoch schedule**: Monero-style — `SeedEpochLength = 2048` blocks,
    `SeedLag = 64`. Key for height *h* = header hash of block
    `floor((h - SeedLag) / SeedEpochLength) * SeedEpochLength` (genesis hash for the first

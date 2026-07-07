@@ -38,7 +38,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define RANDOMX_ARGON_LANES        1
 
 //Argon2d salt
-#define RANDOMX_ARGON_SALT         "RandomX\x03"
+//CHIRAL LOCAL MODIFICATION (see ../../VENDOR.md): unique per-chain salt so
+//stock-configured RandomX hashpower (Monero pools/rentals/botnets) cannot be
+//pointed at the Chiral network unmodified. Upstream default: "RandomX\x03".
+//Miner-facing algorithm id: rx/chiral.
+#define RANDOMX_ARGON_SALT         "RandomX-Chiral\x01"
 
 //Number of random Cache accesses per Dataset item. Minimum is 2.
 #define RANDOMX_CACHE_ACCESSES     8

@@ -30,6 +30,7 @@ Two properties of RandomX v2 differ from ethash by orders of magnitude:
 | `DifficultyBoundDivisor` | 200 | Up to ±10%/block adjustment (ethash: 2048, ±5% max). CPU-network hashrate is volatile — a pool or botnet joining can 10× it overnight — so convergence speed beats smoothness. Also MintMe-validated. |
 | Difficulty algorithm | EIP-100 family, `//9` term (~13 s target), no bomb (`DisposalBlock = 0`) | The bomb was an ethash-era policy device; nothing about RandomX wants one. |
 | Genesis difficulty | **10,000 (= `MinimumDifficulty`)** — **decided 2026-07-06** | Bootstrap-from-minimum: no launch-hashrate prediction needed; the retarget climbs +10%/block, reaching any plausible launch hashrate within a few hours. Precedent: Webchain launched at difficulty `0x1` with the same divisor and was fine. The instamine window is minutes long and bounded by the floor. |
+| RandomX salt | **`RANDOMX_ARGON_SALT = "RandomX-Chiral\x01"`** — **decided 2026-07-06** | Unique per-chain configuration (upstream-recommended): stock Monero-ecosystem hashpower (pools, rentals, botnets) computes wrong hashes for Chiral, eliminating zero-effort hashpower redirection — the dominant launch-day 51% vector given Monero's ~5 GH/s vs. our kH/s scale. Not cryptographic protection (a one-line patch defeats it), but it removes the accident/rental/botnet mass. Cost: stock XMRig needs a patched build; the miner-facing algo id is `rx/chiral` and upstreaming an XMRig variant (à la Wownero's `rx/wow`) is a pre-launch task. All other RandomX parameters stay stock. Chiral test vectors re-derived from a build first validated against official stock vectors (`crypto/randomx/VENDOR.md`). |
 | Seal semantics | `MixDigest` = seed-hash commitment; PoW = `RandomX_v2(key, sealHash ‖ nonce) ≤ 2^256/difficulty` | `eth_getWork`'s second slot now returns the RandomX key (seed hash) — external-miner documentation must say so. |
 | Seed epochs | 2048 blocks, 64 lag (engine defaults; chain-config overridable) | Monero's literal numbers; see the open item below — these were tuned for 2-minute blocks. |
 | Verifier memory bounds | ≤3 epoch caches (~768 MiB) verifying; ≤2 datasets (~4.2 GiB) mining | New parameter class vs. ethash; a verify-only node's RAM floor is now ~0.5–1 GiB. |
@@ -46,23 +47,18 @@ Two properties of RandomX v2 differ from ethash by orders of magnitude:
    16384/256 restores Monero's wall-clock cadence (~2.5 days, ~55 min
    notice). Chain-config fields already exist; this is a genesis-file
    decision.
-2. **RandomX configuration uniqueness** — stock parameters (XMRig-compatible
-   out of the box) vs. a Chiral-unique `RANDOMX_ARGON_SALT` (immune to
-   redirected Monero rental/botnet hashpower, but stock miners need a
-   patch). Must be decided **before** genesis; it changes every hash. The
-   upstream `configuration.md` explicitly recommends per-chain uniqueness.
-3. **Chain identity** — chainID/networkID, currently placeholder 61803, kept
+2. **Chain identity** — chainID/networkID, currently placeholder 61803, kept
    equal on purpose (Webchain/MintMe changed identifiers twice; we should
    pick once and never move).
-4. **Monetary policy** — placeholder is a flat 2 CHI/block with
+3. **Monetary policy** — placeholder is a flat 2 CHI/block with
    Frontier-style uncle rewards. Options: keep flat, or a single geometric
    decay in the spirit of Webchain's 50 × (249/250)^era per 100k blocks —
    picked once and never edited (see the Webchain lesson below).
-5. **Gas limit / block time** — 8M gas at 13 s inherited as placeholders;
+4. **Gas limit / block time** — 8M gas at 13 s inherited as placeholders;
    both are product choices, not hash-algorithm consequences. One RandomX
    caveat: reorgs across an epoch boundary stall verification ~1 s while a
    cache builds, which argues mildly against aggressive block-time cuts.
-6. **Genesis ceremony** — timestamp, extraData, any allocation; plus
+5. **Genesis ceremony** — timestamp, extraData, any allocation; plus
    bootnodes and a testnet definition.
 
 ## Precedent 1: MintMe relaunch (June 2021, in this repo)

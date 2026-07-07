@@ -7,11 +7,22 @@
 - Pinned commit: `2b9ab3e9d380fc2ec86a103a5034ea13c0ce62f4` (2026-02-14, "Fixed misaligned access")
 - Copied: `LICENSE`, `CMakeLists.txt` (reference only, not used by the build),
   `src/` (minus `src/tests/`), `doc/` (design/specs/configuration references).
-- Local modifications: **none**. `configuration.h` is stock; the v2 algorithm
-  is selected at runtime via `RANDOMX_FLAG_V2`. A Chiral-unique configuration
-  (e.g. `RANDOMX_ARGON_SALT`) is a pending launch decision — if adopted, change
-  `configuration.h`, regenerate the test vectors in `randomx_test.go` with a
-  build validated against stock vectors first, and record the diff here.
+- Local modifications:
+  1. `src/configuration.h`: `RANDOMX_ARGON_SALT` changed from the stock
+     `"RandomX\x03"` to **`"RandomX-Chiral\x01"`** (decided 2026-07-06; see
+     docs/chiral/launch-parameters.md). Every Chiral hash differs from
+     stock-configured RandomX, so Monero-ecosystem hashpower cannot be
+     redirected at the network unmodified. Miner-facing algorithm id:
+     `rx/chiral`. All other parameters remain stock. The vendored build
+     reproduced the official stock v2 vectors bit-exactly *before* this
+     change (commit 888d0ae72); the Chiral vectors in `randomx_test.go`
+     were derived with that validated build.
+
+  Cache-buster: Go's build cache does not see edits under `librandomx/`
+  (only files in the package directory are hashed), so any change to the
+  vendored sources must be accompanied by bumping `CHIRAL_RANDOMX_CONFIG`
+  in the `#cgo` flags in `randomx.go` — otherwise stale objects are reused
+  silently.
 
 ## How it builds
 

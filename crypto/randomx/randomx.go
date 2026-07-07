@@ -24,8 +24,12 @@
 package randomx
 
 /*
-#cgo CFLAGS: -O3
-#cgo CXXFLAGS: -O3 -std=c++17
+// CHIRAL_RANDOMX_CONFIG is a cache-buster, not a code switch: Go's build
+// cache only tracks files in this directory, so edits under librandomx/
+// (e.g. configuration.h) are invisible to it. Bump the number whenever the
+// vendored sources change (see VENDOR.md).
+#cgo CFLAGS: -O3 -DCHIRAL_RANDOMX_CONFIG=1
+#cgo CXXFLAGS: -O3 -std=c++17 -DCHIRAL_RANDOMX_CONFIG=1
 #cgo amd64 CFLAGS: -maes
 #cgo amd64 CXXFLAGS: -maes
 #cgo arm64 CFLAGS: -march=armv8-a+crypto

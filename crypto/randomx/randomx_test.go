@@ -7,9 +7,15 @@ import (
 	"testing"
 )
 
-// Official RandomX v2 test vectors from librandomx/src/tests/tests.cpp
-// (the RANDOMX_FLAG_V2 branch of each assert), valid for the stock
-// configuration.h shipped in librandomx.
+// Chiral RandomX v2 test vectors: the upstream test inputs from
+// librandomx/src/tests/tests.cpp hashed under Chiral's unique
+// RANDOMX_ARGON_SALT ("RandomX-Chiral\x01"; miner algo id rx/chiral).
+//
+// Provenance: the vendored library at the pinned commit first reproduced the
+// official stock-configuration v2 vectors bit-exactly (interpreter, JIT and
+// full-dataset modes; commit 888d0ae72), then the salt was applied and these
+// values were derived with that validated build. Regenerate the same way
+// after any configuration.h change (see VENDOR.md).
 var vectorsV2 = []struct {
 	key   string
 	input string // raw string, or hex when isHex is set
@@ -17,15 +23,15 @@ var vectorsV2 = []struct {
 	want  string
 }{
 	{"test key 000", "This is a test", false,
-		"22ec6b861b3eb23686b2efbad69513c967ecfce80983df66c9c5b4fbfb4cdb6f"},
+		"456272039d3d4caf7f5c39a7850d364dab4debe74a97c200a439318b858f6acd"},
 	{"test key 000", "Lorem ipsum dolor sit amet", false,
-		"9e2c772c12fd48f93c14c97fdc89d556264d9100597023f44d9163e279012ecf"},
+		"54423d119c4127dffe6bc5b8d95177ecb22ba589034d875b2c63c77efcb872ac"},
 	{"test key 000", "sed do eiusmod tempor incididunt ut labore et dolore magna aliqua", false,
-		"4d6b063a1a603751d525f18a171336a4002f2f06df6c17e4b25fe17e17796e42"},
+		"b4a9bc61ab6e72288b76abec0915f512e48c106425affb03db84e5651fcdf978"},
 	{"test key 001", "sed do eiusmod tempor incididunt ut labore et dolore magna aliqua", false,
-		"97024134686ce27d362ea8d86d8ef16483ac272abdabd46ef13359400777fe5e"},
+		"8b21286612b37b16febbf0dffda7e2d0fb0d99ec7ad21db641ae61e136bdc7b1"},
 	{"test key 001", "0b0b98bea7e805e0010a2126d287a2a0cc833d312cb786385a7c2f9de69d25537f584a9bc9977b00000000666fd8753bf61a8631f12984e3fd44f4014eca629276817b56f32e9b68bd82f416", true,
-		"c8e92c5f7c1946fecf06bc382b92e3111da38ee3e6a5ad90704e1a9d8aaf6e76"},
+		"3eb4c3d63379a9f35e8663de795ff193509f79f9ed8aaa33b3eb798677ce2c61"},
 }
 
 func vectorInput(t *testing.T, v struct {
