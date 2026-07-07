@@ -26,7 +26,7 @@ import (
 // The constant is checked (and, after genesis changes, regenerated) by
 // TestChiralGenesisHash in core/genesis_test.go, which is where genesis
 // blocks can be assembled without an import cycle.
-var ChiralGenesisHash = common.HexToHash("0x1a1aa124edac5c1a31ac47d85099cf83270f2f2ed36bb426475112e4932a3f5a")
+var ChiralGenesisHash = common.HexToHash("0xb754b2445495883dda49a542abb6b10de62b6ac447ca26874646035dc743ba76")
 
 // DefaultChiralGenesisBlock returns the Chiral network genesis block.
 //
@@ -36,14 +36,17 @@ var ChiralGenesisHash = common.HexToHash("0x1a1aa124edac5c1a31ac47d85099cf83270f
 // launch value, and the empty allocation is deliberate: fair launch, no
 // premine. See docs/chiral/launch-parameters.md for all rationale.
 //
-// TODO(chiral): timestamp and final extraData are set at the launch
-// ceremony (genesis hash must be re-pinned then).
+// TODO(chiral): the timestamp is set at the launch ceremony to the
+// pre-announced launch minute (genesis hash must be re-pinned then; see
+// docs/chiral/launch-parameters.md, "Genesis ceremony").
 func DefaultChiralGenesisBlock() *genesisT.Genesis {
 	return &genesisT.Genesis{
 		Config:    ChiralChainConfig,
 		Nonce:     0,
 		Timestamp: 0,
-		ExtraData: []byte("chiral-genesis-v0"),
+		// The definition of chirality: a thing distinct from its mirror
+		// image. 26 bytes (max 32).
+		ExtraData: []byte("chiral: non-superimposable"),
 		GasLimit:  8_000_000,
 		// Matches consensus/randomx.MinimumDifficulty (params cannot import
 		// the engine package).

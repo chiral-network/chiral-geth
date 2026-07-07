@@ -8,10 +8,13 @@
 > blocks** (1.25B base cap, no premine); genesis difficulty =
 > MinimumDifficulty (bootstrap-from-minimum); 8M gas / 13 s blocks.
 > `geth --chiral --mine --miner.threads=N` mines RandomX v2 blocks and
-> peers sync/verify them. Remaining: genesis ceremony (timestamp +
-> extraData + hash re-pin), bootnodes/testnet, XMRig rx/chiral variant,
-> chainlist registration, CI golangci-lint bump (predates Go 1.24, bogus
-> typecheck errors repo-wide). Note: `--mine` alone only serves remote
+> peers sync/verify them. Genesis extraData is final
+> ("chiral: non-superimposable"); the timestamp is the single remaining
+> genesis field, set by procedure at the launch ceremony (then re-pin the
+> hash). Remaining ops tasks with parameters already decided (see the doc):
+> deploy 3 bootnodes, implement the Levo testnet (chainID 1618033, 2048/64
+> epochs), publish the rx/chiral XMRig fork, register 618033+1618033 on
+> chainlist, bump CI golangci-lint. Note: `--mine` alone only serves remote
 > miners (upstream semantics); local hashing needs `--miner.threads=N`.
 
 Goal: turn this core-geth fork into a new PoW blockchain ("Chiral") whose consensus hash is

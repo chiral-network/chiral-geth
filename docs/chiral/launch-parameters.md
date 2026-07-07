@@ -7,7 +7,9 @@ launch). Companion to `PLAN.md` at the repo root.
 
 Status of each parameter is one of: **set** (implemented on `chiral`),
 **decided** (confirmed by the project owner), or **open** (needs a decision
-before genesis).
+before genesis). As of 2026-07-06 **no parameter remains open**: the only
+value not yet in the tree is the genesis timestamp, fixed by procedure at
+the launch ceremony (see "Genesis ceremony" below).
 
 ## Why the hash change moves parameters at all
 
@@ -40,27 +42,101 @@ Two properties of RandomX v2 differ from ethash by orders of magnitude:
 | Uncle rules, future-block tolerance | max 2 uncles / depth 7; 15 s | Propagation-driven, not hash-driven — deliberately unchanged. |
 | Nonce width | 8 bytes (unchanged) | Astronomically sufficient at CPU-network hashrates. |
 
-## Remaining launch tasks (no parameter decisions left)
+## Launch-task parameters (decided 2026-07-06)
 
-1. **Genesis ceremony** — set the launch timestamp and final extraData in
-   `DefaultChiralGenesisBlock`, then re-pin `ChiralGenesisHash`
-   (`TestGenesisHashes` regenerates it). The allocation stays empty
-   (fair-launch decision above).
-2. **Bootnodes & testnet** — deploy bootstrap nodes, fill
-   `params/bootnodes_chiral.go`, and define a `chiral-testnet` config
-   (same parameters, small premultiplier-free values, separate IDs).
-3. **Miner ecosystem** — patch and publish an XMRig fork with the
-   `rx/chiral` variant (salt `"RandomX-Chiral\x01"`); submit the variant
-   upstream (precedent: Wownero's `rx/wow`).
-4. **Registry** — PR chainID 618033 to `ethereum-lists/chains`
-   (chainid.network).
-5. **CI toolchain** — bump golangci-lint to a Go-1.24-capable version and
-   absorb the repo-wide finding churn (pre-existing rot, tracked from
-   Phase 5).
-6. **Consider later, not at launch**: MESS (ECBP-1100) activation once the
-   network has real value and a healthy peer mesh — machinery is inherited
-   and config-gated (`ECBP1100FBlock`); ETC's activate-then-deactivate
-   lifecycle is the template.
+The remaining work items are operational, but each had parameters of its
+own. Those are now chosen:
+
+### Genesis ceremony
+
+- **extraData: `"chiral: non-superimposable"`** (26 bytes; header limit 32)
+  — **set**, hash re-pinned. The definition of chirality — an object
+  distinct from its own mirror image — as the chain's permanent genesis
+  motto. Chosen now rather than at ceremony so the hash churns once, not
+  twice.
+- **Timestamp: set at ceremony, not before.** Policy: announce a launch
+  minute publicly in advance; at ceremony set `Timestamp` to exactly that
+  unix minute, re-pin `ChiralGenesisHash` (`TestGenesisHashes` prints it),
+  tag the release, and publish binaries built from the tag. A timestamp
+  chosen today would either create a hard cannot-mine-before date (genesis
+  in the future violates the future-block rule for block 1) or a stale
+  past date; neither is worth the fake precision. This is deliberately the
+  **only** field left open — everything else in the genesis block is final.
+- Allocation stays empty (fair launch, decided above); nonce 0.
+
+### Bootnodes
+
+- **Three bootnodes at launch, across at least two providers and two
+  regions**, listed as static enodes in `params/bootnodes_chiral.go`.
+  Three is the smallest count where one failure plus one maintenance still
+  leaves a discovery entry point; provider diversity avoids a single-AS
+  eclipse of the discovery layer. ETC ships a similar handful.
+- Standard port **30303** (no reason to diverge from the ecosystem
+  default; NAT'd home miners benefit from unsurprising firewall rules).
+- Node keys generated on the hosts (`geth --chiral` generates
+  `nodekey` on first start), never reused across hosts, backed up offline
+  — a bootnode's identity is its enode, so key loss silently invalidates
+  the shipped list.
+- Bootnodes run **non-mining** with default peer limits; DNS discovery
+  (EIP-1459 trees) is a post-launch nicety, not a launch requirement —
+  static enodes bootstrap fine at this scale.
+
+### Testnet: **Levo**
+
+Named for levorotation — the left-handed enantiomer to the mainnet's
+right. Parameters:
+
+- **chainID = networkID = 1618033** (the full golden-ratio digits
+  1.618033…; unregistered on chainid.network as of 2026-07-06 — register
+  together with mainnet's 618033).
+- **Seed epochs 2048/64** — deliberately *not* mainnet's 16384/256: at
+  13 s blocks the testnet rotates keys ~3× a day, so epoch transitions,
+  dataset rebuilds and boundary reorgs — the machinery mainnet most fears
+  — get exercised constantly instead of every 2.5 days.
+- Everything else mirrors mainnet exactly (same salt — one `rx/chiral`
+  toolchain for both networks, as Mordor shares etchash with ETC; same
+  reward curve, same difficulty constants, same fork set), because a
+  testnet that diverges from mainnet consensus parameters tests the wrong
+  chain.
+- Implementation is the mintme-pattern file set (`config_levo.go`,
+  `genesis_levo.go`, `bootnodes_levo.go`, `--levo` flag) — tracked as the
+  next code task.
+
+### Miner ecosystem
+
+- Ship a patched XMRig as **`chiral-network/xmrig`** (fork, not rewrite),
+  adding algorithm id **`rx/chiral`** = stock RandomX v2 with
+  `ARGON_SALT "RandomX-Chiral\x01"`; submit the variant upstream once the
+  network is live (Wownero's `rx/wow` is the accepted precedent for
+  salt-only variants). Until upstream merges, the fork is the supported
+  miner; `geth --chiral --mine --miner.threads=N` remains the zero-setup
+  fallback.
+- Pool operators verify shares with the same vendored library
+  (`crypto/randomx`) or any RandomX build with the one-line salt patch.
+
+### Registry & CI
+
+- **Registry**: one PR to `ethereum-lists/chains` registering 618033
+  (Chiral) and 1618033 (Levo) together, after the genesis ceremony fixes
+  the final hashes (the registry entry embeds no hash, but announcing
+  once, with final values, avoids churn).
+- **CI toolchain**: bump golangci-lint to the latest stable release
+  (anything ≥ Go 1.24 support), in a dedicated commit that also absorbs
+  the finding churn across upstream code — kept separate from feature
+  work so the diff stays reviewable. The repo's current pinned linter
+  predates Go 1.24 and emits bogus `typecheck` errors repo-wide.
+
+### MESS (ECBP-1100) — deferred with explicit re-visit criteria
+
+Inherited and config-gated (`ECBP1100FBlock`), deliberately **not** set at
+genesis: its low-peer safety gating would suspend it on a newborn topology
+anyway, and forcing it on (`--ecbp1100.nodisable`) in a sparse mesh raises
+partition-split risk. Revisit when **all three** hold: (1) the chain has
+externally-priced value (an exchange listing or equivalent), (2) a stable
+mesh of ≳50 distinct always-on peers, and (3) no single miner/pool
+sustains >40% of hashrate. Activation is then a coordinated fork-block
+config change, with ETC's activate-then-deactivate lifecycle as the
+template.
 
 ## Precedent 1: MintMe relaunch (June 2021, in this repo)
 
