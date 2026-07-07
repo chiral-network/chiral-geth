@@ -33,12 +33,19 @@ var (
 	// EIP-4844/4788 (Cancun blobs/beacon root) and EIP-4399 (PREVRANDAO —
 	// the DIFFICULTY opcode stays meaningful on a PoW chain).
 	//
-	// TODO(chiral): NetworkID/ChainID are placeholders pending a launch
-	// decision (see PLAN.md).
+	// ChainID == NetworkID == 618033 (decided 2026-07-06: the golden-ratio
+	// digits; 61803 and 161803 were already registered on chainid.network —
+	// registering 618033 there is a launch task). The RandomX seed epoch
+	// schedule is scaled from Monero's 2-minute-block numbers to Chiral's
+	// 13 s blocks: rotation every ~2.5 days with ~55 min of dataset-rebuild
+	// notice. See docs/chiral/launch-parameters.md for all rationale.
 	ChiralChainConfig = &coregeth.CoreGethChainConfig{
-		NetworkID: 61803,
-		ChainID:   big.NewInt(61803),
+		NetworkID: 618033,
+		ChainID:   big.NewInt(618033),
 		RandomX:   new(ctypes.RandomXConfig),
+
+		RandomXSeedEpochLength: big.NewInt(16384),
+		RandomXSeedEpochLag:    big.NewInt(256),
 
 		// Homestead eq
 		EIP2FBlock: big.NewInt(0),

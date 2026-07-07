@@ -1,16 +1,18 @@
 # Chiral: RandomX v2 proof-of-work migration plan
 
-> **Status (2026-07-06)**: Phases 1–4 complete, Phase 5 mostly complete on the
-> `chiral` branch. `geth --chiral --mine --miner.threads=N` mines RandomX v2
-> blocks and peers sync/verify them. Defaults adopted pending confirmation:
-> chainID/networkID 61803, 2048/64 seed epochs, unique RandomX salt
-> "RandomX-Chiral\x01" (decided 2026-07-06; algo id rx/chiral), 2 CHI
-> placeholder reward. Genesis difficulty
-> = MinimumDifficulty (bootstrap-from-minimum, decided 2026-07-06; see
-> docs/chiral/launch-parameters.md). Note: `--mine` alone only serves remote miners (upstream
-> semantics); local hashing needs `--miner.threads=N`. Known env caveat: the
-> repo's pinned golangci-lint predates Go 1.24 and emits bogus typecheck
-> errors repo-wide (pre-existing; CI toolchain bump tracked for Phase 6).
+> **Status (2026-07-06)**: Phases 1–5 complete on the `chiral` branch;
+> Phase 6 launch parameters ALL DECIDED (see
+> docs/chiral/launch-parameters.md): chainID = networkID = **618033**;
+> seed epochs **16384/256**; unique RandomX salt **"RandomX-Chiral\x01"**
+> (miner algo id rx/chiral); rewards **50 CHI × (249/250)^era per 100k
+> blocks** (1.25B base cap, no premine); genesis difficulty =
+> MinimumDifficulty (bootstrap-from-minimum); 8M gas / 13 s blocks.
+> `geth --chiral --mine --miner.threads=N` mines RandomX v2 blocks and
+> peers sync/verify them. Remaining: genesis ceremony (timestamp +
+> extraData + hash re-pin), bootnodes/testnet, XMRig rx/chiral variant,
+> chainlist registration, CI golangci-lint bump (predates Go 1.24, bogus
+> typecheck errors repo-wide). Note: `--mine` alone only serves remote
+> miners (upstream semantics); local hashing needs `--miner.threads=N`.
 
 Goal: turn this core-geth fork into a new PoW blockchain ("Chiral") whose consensus hash is
 **RandomX v2** (https://github.com/SChernykh/RandomX/tree/v2, `doc/design_v2.md`), replacing

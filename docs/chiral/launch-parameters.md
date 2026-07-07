@@ -32,34 +32,35 @@ Two properties of RandomX v2 differ from ethash by orders of magnitude:
 | Genesis difficulty | **10,000 (= `MinimumDifficulty`)** — **decided 2026-07-06** | Bootstrap-from-minimum: no launch-hashrate prediction needed; the retarget climbs +10%/block, reaching any plausible launch hashrate within a few hours. Precedent: Webchain launched at difficulty `0x1` with the same divisor and was fine. The instamine window is minutes long and bounded by the floor. |
 | RandomX salt | **`RANDOMX_ARGON_SALT = "RandomX-Chiral\x01"`** — **decided 2026-07-06** | Unique per-chain configuration (upstream-recommended): stock Monero-ecosystem hashpower (pools, rentals, botnets) computes wrong hashes for Chiral, eliminating zero-effort hashpower redirection — the dominant launch-day 51% vector given Monero's ~5 GH/s vs. our kH/s scale. Not cryptographic protection (a one-line patch defeats it), but it removes the accident/rental/botnet mass. Cost: stock XMRig needs a patched build; the miner-facing algo id is `rx/chiral` and upstreaming an XMRig variant (à la Wownero's `rx/wow`) is a pre-launch task. All other RandomX parameters stay stock. Chiral test vectors re-derived from a build first validated against official stock vectors (`crypto/randomx/VENDOR.md`). |
 | Seal semantics | `MixDigest` = seed-hash commitment; PoW = `RandomX_v2(key, sealHash ‖ nonce) ≤ 2^256/difficulty` | `eth_getWork`'s second slot now returns the RandomX key (seed hash) — external-miner documentation must say so. |
-| Seed epochs | 2048 blocks, 64 lag (engine defaults; chain-config overridable) | Monero's literal numbers; see the open item below — these were tuned for 2-minute blocks. |
+| Seed epochs | **16384 blocks, 256 lag** — **decided 2026-07-06** (set in `ChiralChainConfig`; raw engine defaults remain Monero's 2048/64) | Monero's numbers were tuned for 2-minute blocks; at 13 s they'd rotate the key every ~7.4 h with ~14 min notice, forcing frequent 2.1 GiB dataset rebuilds (30–60 s on small CPUs). 16384/256 restores Monero's wall-clock cadence: rotation every ~2.5 days with ~55 min of rebuild notice. |
+| Chain identity | **chainID = networkID = 618033** — **decided 2026-07-06** | Golden-ratio digits (1.618033…). First choices 61803/161803 are already registered on chainid.network (checked 2026-07-06); 618033 is free — submitting it to `ethereum-lists/chains` is a launch task. Kept equal on purpose; never to change (Webchain churned identifiers twice, pure downstream pain). |
+| Monetary policy | **50 CHI × (249/250)^era, era = 100,000 blocks; uncle & nephew = subsidy/32; no premine** — **decided 2026-07-06** | One geometric curve, chosen once, never to be edited (the Webchain lesson). Base-emission cap = 50 × 100,000 × 250 = **1.25B CHI**, half emitted in ~173 eras ≈ 7.1 years at 13 s blocks (uncles add a few percent on top). Empty genesis allocation: fair launch. Precedented shape (Webchain/MintMe run the same ratio at 100k eras since 2021). |
+| Gas limit / block time | **8,000,000 gas / ~13 s** — **decided 2026-07-06** | Conservative for a young CPU-verified chain; EIP-1559 elasticity allows 16M bursts, and miners can vote the target up later without a fork. 13 s keeps the EIP-100 `//9` machinery on well-trodden ground; epoch-boundary cache builds (~1 s) argue against aggressive cuts. |
 | Verifier memory bounds | ≤3 epoch caches (~768 MiB) verifying; ≤2 datasets (~4.2 GiB) mining | New parameter class vs. ethash; a verify-only node's RAM floor is now ~0.5–1 GiB. |
 | Uncle rules, future-block tolerance | max 2 uncles / depth 7; 15 s | Propagation-driven, not hash-driven — deliberately unchanged. |
 | Nonce width | 8 bytes (unchanged) | Astronomically sufficient at CPU-network hashrates. |
 
-## Open parameters
+## Remaining launch tasks (no parameter decisions left)
 
-1. **Seed epoch schedule** *(recommendation: `RandomXSeedEpochLength = 16384`,
-   `RandomXSeedEpochLag = 256`)*. At 13 s blocks the Monero-default 2048/64
-   means a key rotation every ~7.4 h with only ~14 min of notice; every
-   rotation forces miners to rebuild the 2.1 GiB dataset (2.5 s on a big
-   server, 30–60 s on a 4-core desktop) and verifiers to build a new cache.
-   16384/256 restores Monero's wall-clock cadence (~2.5 days, ~55 min
-   notice). Chain-config fields already exist; this is a genesis-file
-   decision.
-2. **Chain identity** — chainID/networkID, currently placeholder 61803, kept
-   equal on purpose (Webchain/MintMe changed identifiers twice; we should
-   pick once and never move).
-3. **Monetary policy** — placeholder is a flat 2 CHI/block with
-   Frontier-style uncle rewards. Options: keep flat, or a single geometric
-   decay in the spirit of Webchain's 50 × (249/250)^era per 100k blocks —
-   picked once and never edited (see the Webchain lesson below).
-4. **Gas limit / block time** — 8M gas at 13 s inherited as placeholders;
-   both are product choices, not hash-algorithm consequences. One RandomX
-   caveat: reorgs across an epoch boundary stall verification ~1 s while a
-   cache builds, which argues mildly against aggressive block-time cuts.
-5. **Genesis ceremony** — timestamp, extraData, any allocation; plus
-   bootnodes and a testnet definition.
+1. **Genesis ceremony** — set the launch timestamp and final extraData in
+   `DefaultChiralGenesisBlock`, then re-pin `ChiralGenesisHash`
+   (`TestGenesisHashes` regenerates it). The allocation stays empty
+   (fair-launch decision above).
+2. **Bootnodes & testnet** — deploy bootstrap nodes, fill
+   `params/bootnodes_chiral.go`, and define a `chiral-testnet` config
+   (same parameters, small premultiplier-free values, separate IDs).
+3. **Miner ecosystem** — patch and publish an XMRig fork with the
+   `rx/chiral` variant (salt `"RandomX-Chiral\x01"`); submit the variant
+   upstream (precedent: Wownero's `rx/wow`).
+4. **Registry** — PR chainID 618033 to `ethereum-lists/chains`
+   (chainid.network).
+5. **CI toolchain** — bump golangci-lint to a Go-1.24-capable version and
+   absorb the repo-wide finding churn (pre-existing rot, tracked from
+   Phase 5).
+6. **Consider later, not at launch**: MESS (ECBP-1100) activation once the
+   network has real value and a healthy peer mesh — machinery is inherited
+   and config-gated (`ECBP1100FBlock`); ETC's activate-then-deactivate
+   lifecycle is the template.
 
 ## Precedent 1: MintMe relaunch (June 2021, in this repo)
 

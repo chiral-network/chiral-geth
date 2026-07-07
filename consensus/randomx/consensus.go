@@ -18,7 +18,6 @@ import (
 	"github.com/ethereum/go-ethereum/params/vars"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/trie"
-	"github.com/holiman/uint256"
 	"golang.org/x/crypto/sha3"
 )
 
@@ -30,12 +29,6 @@ const (
 var (
 	two256 = new(big.Int).Exp(big.NewInt(2), big.NewInt(256), big.NewInt(0))
 	big32  = big.NewInt(32)
-	big8   = big.NewInt(8)
-
-	// BlockReward is the constant block subsidy credited to the coinbase.
-	// TODO(chiral): placeholder monetary policy pending a launch decision;
-	// see PLAN.md.
-	BlockReward = new(big.Int).Mul(big.NewInt(2), big.NewInt(1e18))
 )
 
 // Various error messages to mark blocks invalid. These should be private to
@@ -522,24 +515,4 @@ func CalcDifficulty(config ctypes.ChainConfigurator, time uint64, parent *types.
 		x.Set(MinimumDifficulty)
 	}
 	return x
-}
-
-// accumulateRewards credits the coinbase of the given block with the mining
-// reward: the static block reward, plus 1/32 extra per included uncle. Uncle
-// miners receive the Frontier-style depth-scaled reward.
-func accumulateRewards(config ctypes.ChainConfigurator, state *state.StateDB, header *types.Header, uncles []*types.Header) {
-	reward := new(big.Int).Set(BlockReward)
-	rw := new(big.Int)
-	for _, uncle := range uncles {
-		// uncleReward = ((uncle.Number + 8 - header.Number) * BlockReward) / 8
-		rw.Add(uncle.Number, big8)
-		rw.Sub(rw, header.Number)
-		rw.Mul(rw, BlockReward)
-		rw.Div(rw, big8)
-		state.AddBalance(uncle.Coinbase, uint256.MustFromBig(rw))
-
-		// nephew bonus: BlockReward / 32
-		reward.Add(reward, rw.Div(BlockReward, big32))
-	}
-	state.AddBalance(header.Coinbase, uint256.MustFromBig(reward))
 }
