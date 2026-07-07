@@ -4,8 +4,9 @@
 > `chiral` branch. `geth --chiral --mine --miner.threads=N` mines RandomX v2
 > blocks and peers sync/verify them. Defaults adopted pending confirmation:
 > chainID/networkID 61803, 2048/64 seed epochs, stock RandomX config
-> (unique-salt decision open), 2 CHI placeholder reward, genesis difficulty
-> 0x20000. Note: `--mine` alone only serves remote miners (upstream
+> (unique-salt decision open), 2 CHI placeholder reward. Genesis difficulty
+> = MinimumDifficulty (bootstrap-from-minimum, decided 2026-07-06; see
+> docs/chiral/launch-parameters.md). Note: `--mine` alone only serves remote miners (upstream
 > semantics); local hashing needs `--miner.threads=N`. Known env caveat: the
 > repo's pinned golangci-lint predates Go 1.24 and emits bogus typecheck
 > errors repo-wide (pre-existing; CI toolchain bump tracked for Phase 6).

@@ -26,12 +26,16 @@ import (
 // The constant is checked (and, after genesis changes, regenerated) by
 // TestChiralGenesisHash in core/genesis_test.go, which is where genesis
 // blocks can be assembled without an import cycle.
-var ChiralGenesisHash = common.HexToHash("0xb1524b30b613245ec37af6d3f36b2157846dcac14dd68d86f87271493d18354d")
+var ChiralGenesisHash = common.HexToHash("0x1a1aa124edac5c1a31ac47d85099cf83270f2f2ed36bb426475112e4932a3f5a")
 
 // DefaultChiralGenesisBlock returns the Chiral network genesis block.
 //
-// TODO(chiral): timestamp, extraData, initial difficulty, gas limit and
-// allocation are placeholders pending launch decisions (see PLAN.md).
+// The genesis difficulty deliberately equals the RandomX engine's minimum
+// difficulty (bootstrap-from-minimum: the +10%/block retarget climbs to the
+// real network hashrate within hours; see docs/chiral/launch-parameters.md).
+//
+// TODO(chiral): timestamp, extraData, gas limit and allocation are
+// placeholders pending launch decisions (see PLAN.md).
 func DefaultChiralGenesisBlock() *genesisT.Genesis {
 	return &genesisT.Genesis{
 		Config:     ChiralChainConfig,
@@ -39,7 +43,9 @@ func DefaultChiralGenesisBlock() *genesisT.Genesis {
 		Timestamp:  0,
 		ExtraData:  []byte("chiral-genesis-v0"),
 		GasLimit:   8_000_000,
-		Difficulty: big.NewInt(0x20000),
+		// Matches consensus/randomx.MinimumDifficulty (params cannot import
+		// the engine package).
+		Difficulty: big.NewInt(10_000),
 		Alloc:      genesisT.GenesisAlloc{},
 	}
 }
