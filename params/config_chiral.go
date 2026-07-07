@@ -103,6 +103,13 @@ var (
 
 		DisposalBlock: big.NewInt(0), // no difficulty bomb, ever
 
+		// MESS (ECBP-1100) artificial finality is disabled by decision
+		// (2026-07-07): subjective fork scoring risks partition splits and
+		// its safety gating is ineffective on a young topology. Any future
+		// adoption is a fresh decision plus a coordinated fork. See
+		// docs/chiral/launch-parameters.md.
+		ECBP1100FBlock: nil,
+
 		RequireBlockHashes: map[uint64]common.Hash{},
 	}
 )

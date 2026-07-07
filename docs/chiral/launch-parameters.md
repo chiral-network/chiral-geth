@@ -126,17 +126,28 @@ right. Parameters:
   work so the diff stays reviewable. The repo's current pinned linter
   predates Go 1.24 and emits bogus `typecheck` errors repo-wide.
 
-### MESS (ECBP-1100) — deferred with explicit re-visit criteria
+### MESS (ECBP-1100) — **disabled by decision (2026-07-07)**
 
-Inherited and config-gated (`ECBP1100FBlock`), deliberately **not** set at
-genesis: its low-peer safety gating would suspend it on a newborn topology
-anyway, and forcing it on (`--ecbp1100.nodisable`) in a sparse mesh raises
-partition-split risk. Revisit when **all three** hold: (1) the chain has
-externally-priced value (an exchange listing or equivalent), (2) a stable
-mesh of ≳50 distinct always-on peers, and (3) no single miner/pool
-sustains >40% of hashrate. Activation is then a coordinated fork-block
-config change, with ETC's activate-then-deactivate lifecycle as the
-template.
+Not part of Chiral consensus policy. Rationale:
+
+- MESS is subjective fork scoring: nodes weigh reorgs by local arrival
+  time, so under a network partition two segments can finalize different
+  branches — a consensus-split vector, not just a tuning knob.
+- Its own safety gating (minimum peer count, stale-head auto-off) makes it
+  ineffective exactly when a young chain is most fragile, and forcing it
+  on (`--ecbp1100.nodisable`) in a sparse mesh maximizes the split risk.
+- The precedent chain arc ended in removal: ETC activated it as a
+  post-attack stopgap (block 11.38M, Oct 2020) and deactivated it at
+  Spiral (block 19.25M, Jan 2023). Chiral's launch-day 51% defenses are
+  the unique `rx/chiral` salt and deep-confirmation guidance instead.
+
+Mechanics of the disablement: `ECBP1100FBlock` is explicitly nil in
+`ChiralChainConfig` (the machinery stays in the tree — it is inherited
+core-geth code and other configs use it), and a node started with the
+generic `--ecbp1100` override on a RandomX network logs a prominent
+warning that local activation risks diverging from the network. Any
+future adoption would be a fresh decision plus a coordinated fork — not a
+scheduled revisit.
 
 ## Precedent 1: MintMe relaunch (June 2021, in this repo)
 

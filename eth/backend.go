@@ -252,6 +252,14 @@ func New(stack *node.Node, config *ethconfig.Config) (*Ethereum, error) {
 	eth.bloomIndexer.Start(eth.blockchain)
 	// Handle artificial finality config override cases.
 	if n := config.OverrideECBP1100; n != nil {
+		if eth.blockchain.Config().GetConsensusEngineType().IsRandomX() {
+			// MESS is disabled by decision on RandomX (Chiral) networks;
+			// see docs/chiral/launch-parameters.md. A lone node applying
+			// subjective fork scoring can diverge from the network during
+			// deep reorgs, so activating it locally is almost certainly a
+			// mistake (e.g. an ETC guide followed verbatim).
+			log.Warn("MESS (ECBP1100) is not part of this network's consensus policy; enabling it locally risks diverging from the network", "override", *n)
+		}
 		if err := eth.blockchain.Config().SetECBP1100Transition(n); err != nil {
 			return nil, err
 		}
